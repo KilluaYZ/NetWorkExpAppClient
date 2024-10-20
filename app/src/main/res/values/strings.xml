@@ -7,4 +7,9 @@
     <string name="connect">连接</string>
     <string name="disConnect">断开连接</string>
     <string name="connected">Connected</string>
+    <string name="sending">文件正在发送中…</string>
+    <string name="receiving">文件正在接收中…</string>
+    <string name="connectSuccess">成功建立连接:）</string>
+    <string name="connectFail">连接失败T_T</string>
+    <string name="disconnectSuccess">已断开连接</string>
 </resources>

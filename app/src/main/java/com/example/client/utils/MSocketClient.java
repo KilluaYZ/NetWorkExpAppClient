@@ -2,12 +2,12 @@ package com.example.client.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.URI;
 import java.util.concurrent.Callable;
 
 public class MSocketClient {
@@ -16,10 +16,11 @@ public class MSocketClient {
     public MSocketClient(){}
 
     // 进行socket连接
-    public void connect(String ip, int port){
+    public void connect(String ip, int port, Context context){
         try{
             socket = new Socket(ip, port);
             System.out.println("Connect to Server "+ip+":"+port);
+            Toast.makeText(context, "Connect to Server "+ip+":"+port, Toast.LENGTH_SHORT).show();
         }catch(Exception e){
             e.printStackTrace();
         }
