@@ -20,6 +20,7 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.example.client.R;
 import com.example.client.activity.MainActivity;
 import com.example.client.utils.MBinaryFileManager;
+import com.example.client.utils.MFrame;
 import com.example.client.viewmodel.MainViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -36,7 +37,8 @@ public class FileDialog extends DialogFragment {
 	private MainActivity activity;
 	private View dialogView;
 	private LottieAnimationView lottieAnimProgress;
-
+	private TextView tvSpeed;
+	private long startTime;
 	public FileDialog(MainActivity activity) {
 		this.activity = activity;
 	}
@@ -60,6 +62,7 @@ public class FileDialog extends DialogFragment {
 		dialogView = inflater.inflate(R.layout.dialog, null);
 		builder = new MaterialAlertDialogBuilder(requireContext());
 		builder.setView(dialogView);
+		startTime = System.currentTimeMillis();
 		return builder.create();
 	}
 
@@ -89,6 +92,7 @@ public class FileDialog extends DialogFragment {
 		tvCount = dialogView.findViewById(R.id.tvCount);
 		tvTitle = dialogView.findViewById(R.id.tvTitle);
 		lottieAnimProgress = dialogView.findViewById(R.id.lottieAnimProgress);
+		tvSpeed = dialogView.findViewById(R.id.tvSpeed);
 	}
 
 	private void sendFile() {
@@ -97,6 +101,7 @@ public class FileDialog extends DialogFragment {
 			if (getActivity() == null) {
 				return;
 			}
+			long startTime = System.currentTimeMillis();
 			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(getActivity(), mViewModel.outFileUriPath);
 			mViewModel.mSocketClient.initSend();
 			while (mBinaryFileManager.has_next()) {
@@ -127,27 +132,30 @@ public class FileDialog extends DialogFragment {
 	 */
 	private void initObserver() {
 		mViewModel.packageCount.observe(getViewLifecycleOwner(), integer -> {
-			if (mViewModel.packageSum.getValue() == null) {
+			if (mViewModel.packageSum.getValue() == null || mViewModel.packageCount.getValue() == null || mViewModel.packageSum.getValue() == -1) {
 				return;
 			}
+			// TODO:补充一个异常的逻辑
 			tvSum.setText("/" + mViewModel.packageSum.getValue());
 			tvCount.setText(String.valueOf(integer));
 			// 计算进度百分比
-			if (mViewModel.packageCount.getValue() == null || mViewModel.packageSum.getValue() == null) {
-				return;
-			}
 			final int progress = (int) (((double) mViewModel.packageCount.getValue() / mViewModel.packageSum.getValue()) * 100);
-			// 使用 Handler 更新 UI
+			// 使用 Handler 更新进度条
 			handler.post(() -> progressBar.setProgress(progress));
+			// 完成状态
 			if (Objects.equals(integer, mViewModel.packageSum.getValue()) && integer != -1) {
 				tvTitle.setText(R.string.sendSuccess);
 				setLottieAnimation("cat.json");
 			} else if (Objects.equals(0, mViewModel.packageSum.getValue())) {
+				// 空文件
 				tvTitle.setText(R.string.sendAbort);
 				Toast.makeText(getContext(), "文件为空", Toast.LENGTH_SHORT).show();
 			} else {
+				// 传输中
 				tvTitle.setText(R.string.sending);
+				tvSpeed.setText(MFrame.toSpeedString(mViewModel.packageCount.getValue(), startTime));
 			}
+
 		});
 	}
 	private void setLottieAnimation(String jsonFileName) {

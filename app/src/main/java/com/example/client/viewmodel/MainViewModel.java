@@ -17,6 +17,7 @@ public class MainViewModel extends AndroidViewModel {
 	public final MutableLiveData<Integer> packageSum = new MutableLiveData<>();
 	public final MutableLiveData<Integer> packageCount = new MutableLiveData<>();
 	public final MutableLiveData<Boolean> isConnected = new MutableLiveData<>();
+
 	public int action;
 	public Uri outFileUriPath;
 	public MSocketClient mSocketClient = null;

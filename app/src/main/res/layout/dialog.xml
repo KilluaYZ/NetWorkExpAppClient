@@ -58,4 +58,13 @@
         android:textColor="@color/black"
         android:text="/0" />
 
+    <TextView
+        android:id="@+id/tvSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0kb/s"
+        app:layout_constraintLeft_toLeftOf="@+id/progressBar"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

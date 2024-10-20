@@ -56,6 +56,26 @@ public class MFrame {
         _data[offset+3] = (byte) ((val >>> 24) & 0xff);
     }
 
+    // 计算得到速度，currentPackageNum是已经发送的包数量，start_time是开始发送的时间
+    public static String toSpeedString(int currentPackageNum, long start_time){
+        long time_cost = System.currentTimeMillis() - start_time;
+        // 已经发送的字节数
+        Integer sentByteNum = currentPackageNum * FRAME_BUF_SIZE;
+        Float bytesPerSecond = sentByteNum / (time_cost / 1000.0f);
+        String suffix = "B/s";
+        if(bytesPerSecond > 1024){
+            suffix = "K" + suffix;
+            bytesPerSecond /= 1024;
+        }else if (bytesPerSecond > 1024 * 1024){
+            bytesPerSecond /= (1024 * 1024);
+            suffix = "M" + suffix;
+        }else if (bytesPerSecond > 1024 * 1024 * 1024){
+            bytesPerSecond /= (1024 * 1024 * 1024);
+            suffix = "G" + suffix;
+        }
+        return String.format("%.2f", bytesPerSecond) + suffix;
+    }
+
     public byte[] toBytes() {
         byte[] ret = new byte[FRAME_SIZE];
         int32ToBytesLittleEndian(ret, 0, this._id);
