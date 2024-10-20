@@ -1,5 +1,6 @@
 package com.example.client.utils;
 
+import android.content.Context;
 import android.net.Uri;
 
 import java.io.IOException;
@@ -72,12 +73,12 @@ public class MSocketClient {
         }
     }
 
-//    receiveSyn用法示例
-    public void receive(){
+    //    receiveSyn用法示例
+    public void receive(Context context){
         // 待保存的文件路径
         Uri filePath = Uri.parse("123.txt");
         // 大文件传输包拆分和拼接的Manager
-        MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(filePath);
+        MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(context, filePath);
         // 接收大文件之前需要进行的一些初始化
         initReceive();
         // 循环地接收数据包
@@ -128,12 +129,12 @@ public class MSocketClient {
     }
 
 
-//    sendSyn用法示例
-    public void send(){
+    //    sendSyn用法示例
+    public void send(Context context){
         // 待保存的文件路径
         Uri filePath = Uri.parse("123.txt");
         // 大文件传输包拆分和拼接的Manager
-        MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(filePath);
+        MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(context, filePath);
         // 发送大文件之前需要进行的一些初始化
         initSend();
         // 循环地发送数据包

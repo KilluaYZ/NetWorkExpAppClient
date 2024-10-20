@@ -16,7 +16,10 @@ public class MFrame {
     public static int FRAME_TYPE_REQUEST_DATA = 5;
     public static int FRAME_TYPE_SEND_DATA = 6;
     public MFrame() {
-
+        this._type = 0;
+        this._buf = new byte[FRAME_BUF_SIZE];
+        this._id = 0;
+        this._length = 0;
     }
 
     public MFrame fromBytes(byte[] _data) {
@@ -24,9 +27,10 @@ public class MFrame {
         if (_data.length < FRAME_HEADER_SIZE) throw new RuntimeException();
         this._id = bytesToInt32LittleEndian(_data, 0);
         this._type = bytesToInt16LittleEndian(_data, 4);
-        if(this._type == FRAME_TYPE_START || this._type == FRAME_TYPE_END || this._type == FRAME_TYPE_DATA){
-            this._length = bytesToInt32LittleEndian(_data, 6);
-            this._buf = new byte[FRAME_SIZE];
+        if(this._type == FRAME_TYPE_START || this._type == FRAME_TYPE_DATA){
+            this._length = bytesToInt16LittleEndian(_data, 6);
+        }
+        if(this._type == FRAME_TYPE_DATA){
             System.arraycopy(_data, FRAME_HEADER_SIZE, this._buf, 0, this._length);
         }
         return this;
