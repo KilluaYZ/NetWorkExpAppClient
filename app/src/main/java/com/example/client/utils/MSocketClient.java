@@ -19,16 +19,14 @@ public class MSocketClient {
 
     // 进行socket连接
     public void connect(String ip, int port, Activity activity, MainViewModel mainViewModel){
+        if (mainViewModel.isConnected.getValue() != null && mainViewModel.isConnected.getValue()) {
+            return;
+        }
         new Thread(() -> {
             try{
                 socket = new Socket(ip, port);
                 System.out.println("Connect to Server "+ip+":"+port);
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainViewModel.isConnected.setValue(true);
-                    }
-                });
+                activity.runOnUiThread(() -> mainViewModel.isConnected.setValue(true));
 
             }catch(Exception e){
                 e.printStackTrace();

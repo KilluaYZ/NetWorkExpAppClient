@@ -9,17 +9,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.client.R;
 import com.example.client.activity.MainActivity;
 import com.example.client.utils.MBinaryFileManager;
 import com.example.client.viewmodel.MainViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.util.Objects;
 
 public class FileDialog extends DialogFragment {
 	private MaterialAlertDialogBuilder builder;
@@ -31,6 +35,7 @@ public class FileDialog extends DialogFragment {
 	private Handler handler;
 	private MainActivity activity;
 	private View dialogView;
+	private LottieAnimationView lottieAnimProgress;
 
 	public FileDialog(MainActivity activity) {
 		this.activity = activity;
@@ -40,8 +45,7 @@ public class FileDialog extends DialogFragment {
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		handler = new Handler(Looper.getMainLooper());
-		// 加载自定义布局
-		initViews();  // 确保在这里初始化 views
+		initViews();
 		if (activity != null) {
 			mViewModel = new ViewModelProvider(activity).get(MainViewModel.class);
 		}
@@ -84,6 +88,7 @@ public class FileDialog extends DialogFragment {
 		tvSum = dialogView.findViewById(R.id.tvSum);
 		tvCount = dialogView.findViewById(R.id.tvCount);
 		tvTitle = dialogView.findViewById(R.id.tvTitle);
+		lottieAnimProgress = dialogView.findViewById(R.id.lottieAnimProgress);
 	}
 
 	private void sendFile() {
@@ -121,11 +126,11 @@ public class FileDialog extends DialogFragment {
 	 * 监听ViewModel中的数据，当packageCount发生变化，就更新进度条
 	 */
 	private void initObserver() {
-		mViewModel.packageSum.observe(getViewLifecycleOwner(), integer -> {
-			progressBar.setMax(integer);
-			tvSum.setText("/" + integer);
-		});
 		mViewModel.packageCount.observe(getViewLifecycleOwner(), integer -> {
+			if (mViewModel.packageSum.getValue() == null) {
+				return;
+			}
+			tvSum.setText("/" + mViewModel.packageSum.getValue());
 			tvCount.setText(String.valueOf(integer));
 			// 计算进度百分比
 			if (mViewModel.packageCount.getValue() == null || mViewModel.packageSum.getValue() == null) {
@@ -134,6 +139,19 @@ public class FileDialog extends DialogFragment {
 			final int progress = (int) (((double) mViewModel.packageCount.getValue() / mViewModel.packageSum.getValue()) * 100);
 			// 使用 Handler 更新 UI
 			handler.post(() -> progressBar.setProgress(progress));
+			if (Objects.equals(integer, mViewModel.packageSum.getValue()) && integer != -1) {
+				tvTitle.setText(R.string.sendSuccess);
+				setLottieAnimation("cat.json");
+			} else if (Objects.equals(0, mViewModel.packageSum.getValue())) {
+				tvTitle.setText(R.string.sendAbort);
+				Toast.makeText(getContext(), "文件为空", Toast.LENGTH_SHORT).show();
+			} else {
+				tvTitle.setText(R.string.sending);
+			}
 		});
+	}
+	private void setLottieAnimation(String jsonFileName) {
+		lottieAnimProgress.setAnimation(jsonFileName);  // 替换成新的动画文件
+		lottieAnimProgress.playAnimation();  // 播放动画
 	}
 }

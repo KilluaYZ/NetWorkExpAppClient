@@ -17,7 +17,7 @@ public class MFrame {
     public static int FRAME_TYPE_SEND_DATA = 6;
     public MFrame() {
         this._type = 0;
-        this._buf = new byte[FRAME_BUF_SIZE];
+        this._buf = new byte[FRAME_SIZE];
         this._id = 0;
         this._length = 0;
     }
@@ -61,7 +61,9 @@ public class MFrame {
         int32ToBytesLittleEndian(ret, 0, this._id);
         int16ToBytesLittleEndian(ret, 4, this._type);
         int16ToBytesLittleEndian(ret, 6, this._length);
-        System.arraycopy(this._buf, 0, ret, FRAME_HEADER_SIZE, this._length);
+        if(this._type == FRAME_TYPE_DATA){
+            System.arraycopy(this._buf, 0, ret, FRAME_HEADER_SIZE, this._length);
+        }
         return ret;
     }
 

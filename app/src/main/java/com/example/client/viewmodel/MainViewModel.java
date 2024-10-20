@@ -23,8 +23,8 @@ public class MainViewModel extends AndroidViewModel {
 
 	public MainViewModel(@NonNull Application application) {
 		super(application);
-		packageCount.setValue(0);
-		packageSum.setValue(0);
+		packageCount.setValue(-1);
+		packageSum.setValue(-1);
 		isConnected.setValue(false);
 	}
 }

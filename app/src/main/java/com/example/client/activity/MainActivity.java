@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 	private Button btnConnect;
 	private EditText etIP;
 	private EditText etPort;
+	private TextView tvSignal;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -53,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
 		btnConnect = findViewById(R.id.btnConnect);
 		etIP = findViewById(R.id.etIP);
 		etPort = findViewById(R.id.etPort);
+		tvSignal = findViewById(R.id.tvSignal);
 
 		btnConnect.setOnClickListener(v -> {
 				mainViewModel.mSocketClient = new MSocketClient();
 				mainViewModel.mSocketClient.connect(etIP.getText().toString(), Integer.parseInt(etPort.getText().toString()), this, mainViewModel);
-
 
 			// TODO:连接/断开连接，更新UI
 		});
@@ -107,7 +109,11 @@ public class MainActivity extends AppCompatActivity {
 	private void initObserver() {
 		mainViewModel.isConnected.observe(this, aBoolean -> {
 			// TODO:连接状态改变，更新UI
-			Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show();
+			if (aBoolean) {
+				Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show();
+				tvSignal.setText(getString(R.string.connected));
+
+			}
 		});
 	}
 }
