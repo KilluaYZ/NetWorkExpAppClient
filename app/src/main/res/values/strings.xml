@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Client</string>
+    <string name="ip">IP</string>
+    <string name="port">port</string>
+    <string name="send">发送</string>
+    <string name="receive">接收</string>
+    <string name="connect">连接</string>
+    <string name="disConnect">断开连接</string>
+    <string name="connected">Connected</string>
 </resources>
