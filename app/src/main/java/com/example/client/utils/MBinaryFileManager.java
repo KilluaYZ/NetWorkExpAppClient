@@ -3,14 +3,17 @@ package com.example.client.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 public class MBinaryFileManager {
     private Uri filePath;
@@ -56,15 +59,17 @@ public class MBinaryFileManager {
         this.outfile.close();
     }
 
-    private byte[] first() throws FileNotFoundException {
-        File file = new File(this.filePath.getPath());
-        long fileSize = file.length();
+    private byte[] first() throws IOException {
+        ContentResolver contentResolver = context.getContentResolver();
+        this.infile = contentResolver.openInputStream(this.filePath);
+        ParcelFileDescriptor pfd = contentResolver.openFileDescriptor(this.filePath, "r");
+        FileDescriptor fd = pfd.getFileDescriptor();
+        FileChannel fileChannel = new FileInputStream(fd).getChannel();
+        long fileSize = fileChannel.size();
         this._cur = 0;
         this._byte_size = (int) fileSize;
         this._size = (int) Math.ceil((double) fileSize / MFrame.FRAME_BUF_SIZE);
         this._ext_size = this._size + 2;
-        ContentResolver contentResolver = context.getContentResolver();
-        this.infile = contentResolver.openInputStream(this.filePath);
 
         MFrame mframe = new MFrame()
                 .set_id(0)
