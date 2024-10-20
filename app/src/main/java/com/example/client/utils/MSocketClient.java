@@ -1,9 +1,12 @@
 package com.example.client.utils;
 
+import android.net.Uri;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.URI;
 import java.util.concurrent.Callable;
 
 public class MSocketClient {
@@ -72,7 +75,7 @@ public class MSocketClient {
 //    receiveSyn用法示例
     public void receive(){
         // 待保存的文件路径
-        String filePath = "123.txt";
+        Uri filePath = Uri.parse("123.txt");
         // 大文件传输包拆分和拼接的Manager
         MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(filePath);
         // 接收大文件之前需要进行的一些初始化
@@ -128,7 +131,7 @@ public class MSocketClient {
 //    sendSyn用法示例
     public void send(){
         // 待保存的文件路径
-        String filePath = "123.txt";
+        Uri filePath = Uri.parse("123.txt");
         // 大文件传输包拆分和拼接的Manager
         MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(filePath);
         // 发送大文件之前需要进行的一些初始化

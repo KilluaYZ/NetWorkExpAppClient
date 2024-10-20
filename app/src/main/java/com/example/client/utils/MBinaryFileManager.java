@@ -1,5 +1,7 @@
 package com.example.client.utils;
 
+import android.net.Uri;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MBinaryFileManager {
-    private String filePath;
+    private Uri filePath;
     private int _cur;
     private int _ext_size;
     private int _size;
@@ -15,7 +17,7 @@ public class MBinaryFileManager {
     private FileOutputStream outfile;
     private FileInputStream infile;
 
-    public MBinaryFileManager(String filePath){
+    public MBinaryFileManager(Uri filePath){
         this.filePath = filePath;
         this._cur = 0;
         this._ext_size = 0;
@@ -30,7 +32,7 @@ public class MBinaryFileManager {
         this._cur = 0;
         this._size = mframe.get_length();
         this._ext_size = this._size + 2;
-        this.outfile = new FileOutputStream(this.filePath);
+        this.outfile = new FileOutputStream(this.filePath.getPath());
     }
 
     private void mid (byte[] data) throws IOException {
@@ -48,13 +50,13 @@ public class MBinaryFileManager {
     }
 
     private byte[] first() throws FileNotFoundException {
-        File file = new File(this.filePath);
+        File file = new File(this.filePath.getPath());
         long fileSize = file.length();
         this._cur = 0;
         this._byte_size = (int) fileSize;
         this._size = (int) Math.ceil((double) fileSize / MFrame.FRAME_BUF_SIZE);
         this._ext_size = this._size + 2;
-        this.infile = new FileInputStream(this.filePath);
+        this.infile = new FileInputStream(this.filePath.getPath());
 
         MFrame mframe = new MFrame()
                 .set_id(0)
