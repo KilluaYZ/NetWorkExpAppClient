@@ -1,8 +1,10 @@
 package com.example.client.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
-import android.widget.Toast;
+
+import com.example.client.viewmodel.MainViewModel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,14 +18,22 @@ public class MSocketClient {
     public MSocketClient(){}
 
     // 进行socket连接
-    public void connect(String ip, int port, Context context){
-        try{
-            socket = new Socket(ip, port);
-            System.out.println("Connect to Server "+ip+":"+port);
-            Toast.makeText(context, "Connect to Server "+ip+":"+port, Toast.LENGTH_SHORT).show();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+    public void connect(String ip, int port, Activity activity, MainViewModel mainViewModel){
+        new Thread(() -> {
+            try{
+                socket = new Socket(ip, port);
+                System.out.println("Connect to Server "+ip+":"+port);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainViewModel.isConnected.setValue(true);
+                    }
+                });
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     public void close(){

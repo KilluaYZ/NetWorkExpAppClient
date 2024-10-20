@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.client.R;
 import com.example.client.fragment.FileDialog;
@@ -32,8 +34,10 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		initView();
-		mainViewModel = new MainViewModel(this.getApplication());
+		mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+		initObserver();
 	}
+
 
 	private void initView() {
 		EdgeToEdge.enable(this);
@@ -51,16 +55,15 @@ public class MainActivity extends AppCompatActivity {
 		etPort = findViewById(R.id.etPort);
 
 		btnConnect.setOnClickListener(v -> {
-			if (!mainViewModel.isConnected) {
 				mainViewModel.mSocketClient = new MSocketClient();
-				mainViewModel.mSocketClient.connect(etIP.getText().toString(), Integer.parseInt(etPort.getText().toString()), this);
-				mainViewModel.isConnected = !mainViewModel.isConnected;
-			}
+				mainViewModel.mSocketClient.connect(etIP.getText().toString(), Integer.parseInt(etPort.getText().toString()), this, mainViewModel);
+
 
 			// TODO:连接/断开连接，更新UI
 		});
 
 		btnSend.setOnClickListener(v -> {
+			mainViewModel.action = MainViewModel.SEND;
 			// TODO:发送数据
 			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 			// 设置文件类型，例如选择所有类型的文件
@@ -91,14 +94,20 @@ public class MainActivity extends AppCompatActivity {
 			// 获取选中的文件Uri
 			Uri selectedFileUri = data.getData();
 			mainViewModel.outFileUriPath = selectedFileUri;
-			mainViewModel.action = MainViewModel.SEND;
 			showCustomDialog();
 		}
 	}
 
 	// 在Activity或Fragment中
 	public void showCustomDialog() {
-		FileDialog fileDialog = new FileDialog();
-		fileDialog.show(getSupportFragmentManager(), "fileDialog");
+		FileDialog fileDialog = new FileDialog(this);
+ 		fileDialog.show(getSupportFragmentManager(), "fileDialog");
+	}
+
+	private void initObserver() {
+		mainViewModel.isConnected.observe(this, aBoolean -> {
+			// TODO:连接状态改变，更新UI
+			Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show();
+		});
 	}
 }

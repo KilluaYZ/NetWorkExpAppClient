@@ -16,7 +16,7 @@ public class MainViewModel extends AndroidViewModel {
 
 	public final MutableLiveData<Integer> packageSum = new MutableLiveData<>();
 	public final MutableLiveData<Integer> packageCount = new MutableLiveData<>();
-	public boolean isConnected = false;
+	public final MutableLiveData<Boolean> isConnected = new MutableLiveData<>();
 	public int action;
 	public Uri outFileUriPath;
 	public MSocketClient mSocketClient = null;
@@ -25,5 +25,6 @@ public class MainViewModel extends AndroidViewModel {
 		super(application);
 		packageCount.setValue(0);
 		packageSum.setValue(0);
+		isConnected.setValue(false);
 	}
 }

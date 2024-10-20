@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -15,6 +16,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.client.R;
+import com.example.client.activity.MainActivity;
 import com.example.client.utils.MBinaryFileManager;
 import com.example.client.viewmodel.MainViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -27,16 +29,41 @@ public class FileDialog extends DialogFragment {
 	private TextView tvCount;
 	private TextView tvTitle;
 	private Handler handler;
+	private MainActivity activity;
+	private View dialogView;
+
+	public FileDialog(MainActivity activity) {
+		this.activity = activity;
+	}
+
+	@Nullable
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		handler = new Handler(Looper.getMainLooper());
+		// 加载自定义布局
+		initViews();  // 确保在这里初始化 views
+		if (activity != null) {
+			mViewModel = new ViewModelProvider(activity).get(MainViewModel.class);
+		}
+		return dialogView;
+	}
 
 	@NonNull
 	@Override
 	public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-		handler = new Handler(Looper.getMainLooper());
-		// 创建并返回对话框
-		initViews();
-		if (getActivity() != null) {
-			mViewModel = new ViewModelProvider(getActivity()).get(MainViewModel.class);
-		}
+		LayoutInflater inflater = requireActivity().getLayoutInflater();
+		// 加载自定义布局
+		dialogView = inflater.inflate(R.layout.dialog, null);
+		builder = new MaterialAlertDialogBuilder(requireContext());
+		builder.setView(dialogView);
+		return builder.create();
+	}
+
+	@Override
+	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		// 在视图创建后初始化观察者
+		initObserver();
 		switch (mViewModel.action) {
 			case MainViewModel.SEND:
 				tvTitle.setText(R.string.sending);
@@ -49,25 +76,10 @@ public class FileDialog extends DialogFragment {
 			default:
 				break;
 		}
-		return builder.create();
-	}
-
-	@Override
-	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-		super.onViewCreated(view, savedInstanceState);
-		initObserver();
 	}
 
 	private void initViews() {
-		// 创建LayoutInflater对象
-		LayoutInflater inflater = requireActivity().getLayoutInflater();
-
-		// 加载自定义布局
-		View dialogView = inflater.inflate(R.layout.dialog, null);
-		builder = new MaterialAlertDialogBuilder(requireContext());
 		// 设置自定义布局
-		builder.setView(dialogView);
-
 		progressBar = dialogView.findViewById(R.id.progressBar);
 		tvSum = dialogView.findViewById(R.id.tvSum);
 		tvCount = dialogView.findViewById(R.id.tvCount);
@@ -77,15 +89,19 @@ public class FileDialog extends DialogFragment {
 	private void sendFile() {
 		new Thread(() -> {
 			// 大文件传输包拆分和拼接的Manager
-			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(mViewModel.outFileUriPath);
-			// 发送大文件之前需要进行的一些初始化
-			int totalPackageNum = mBinaryFileManager.getTotalNum();
-			mViewModel.packageSum.setValue(totalPackageNum);
+			if (getActivity() == null) {
+				return;
+			}
+			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(getActivity(), mViewModel.outFileUriPath);
 			mViewModel.mSocketClient.initSend();
 			while (mBinaryFileManager.has_next()) {
 				mViewModel.mSocketClient.sendSyn(mBinaryFileManager, () -> {
+					int totalPackageNum = mBinaryFileManager.getTotalNum();
 					int curPackageNum = mBinaryFileManager.getCurNum();
-					mViewModel.packageCount.setValue(curPackageNum);
+					activity.runOnUiThread(() -> {
+						mViewModel.packageSum.setValue(totalPackageNum);
+						mViewModel.packageCount.setValue(curPackageNum);
+					});
 					return null;
 				});
 			}
@@ -93,20 +109,11 @@ public class FileDialog extends DialogFragment {
 	}
 
 	private void receiveFile() {
+		if (getActivity() == null) {
+			return;
+		}
 		new Thread(() -> {
-			// 大文件传输包拆分和拼接的Manager
-			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(mViewModel.outFileUriPath);
-			// 发送大文件之前需要进行的一些初始化
-			int totalPackageNum = mBinaryFileManager.getTotalNum();
-			mViewModel.packageSum.setValue(totalPackageNum);
-			mViewModel.mSocketClient.initSend();
-			while (mBinaryFileManager.has_next()) {
-				mViewModel.mSocketClient.sendSyn(mBinaryFileManager, () -> {
-					int curPackageNum = mBinaryFileManager.getCurNum();
-					mViewModel.packageCount.setValue(curPackageNum);
-					return null;
-				});
-			}
+			// TODO:接收文件
 		}).start();
 	}
 
@@ -114,8 +121,11 @@ public class FileDialog extends DialogFragment {
 	 * 监听ViewModel中的数据，当packageCount发生变化，就更新进度条
 	 */
 	private void initObserver() {
+		mViewModel.packageSum.observe(getViewLifecycleOwner(), integer -> {
+			progressBar.setMax(integer);
+			tvSum.setText("/" + integer);
+		});
 		mViewModel.packageCount.observe(getViewLifecycleOwner(), integer -> {
-			tvSum.setText(String.valueOf(mViewModel.packageSum.getValue()));
 			tvCount.setText(String.valueOf(integer));
 			// 计算进度百分比
 			if (mViewModel.packageCount.getValue() == null || mViewModel.packageSum.getValue() == null) {
@@ -124,10 +134,6 @@ public class FileDialog extends DialogFragment {
 			final int progress = (int) (((double) mViewModel.packageCount.getValue() / mViewModel.packageSum.getValue()) * 100);
 			// 使用 Handler 更新 UI
 			handler.post(() -> progressBar.setProgress(progress));
-			// 当全部文件接收完毕，关闭弹窗
-			if (mViewModel.packageCount == mViewModel.packageSum) {
-				dismiss();
-			}
 		});
 	}
 }
