@@ -18,8 +18,11 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.client.R;
 import com.example.client.fragment.FileDialog;
+import com.example.client.utils.MFrame;
 import com.example.client.utils.MSocketClient;
 import com.example.client.viewmodel.MainViewModel;
+
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,12 +35,19 @@ public class MainActivity extends AppCompatActivity {
 	private EditText etIP;
 	private EditText etPort;
 	private TextView tvSignal;
+	private EditText etMsg;
+	private Button btnSendMsg;
+	private TextView serverMsg;
+
+	private MainActivity mainAct;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		initView();
 		mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 		initObserver();
+		mainAct = this;
 	}
 
 
@@ -56,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
 		etIP = findViewById(R.id.etIP);
 		etPort = findViewById(R.id.etPort);
 		tvSignal = findViewById(R.id.tvSignal);
+		etMsg = findViewById(R.id.etMsg);
+		btnSendMsg = findViewById(R.id.btnSendMsg);
+		serverMsg = findViewById(R.id.serverMsg);
 
 		btnConnect.setOnClickListener(v -> {
 				mainViewModel.mSocketClient = new MSocketClient();
@@ -76,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 		btnReceive.setOnClickListener(v -> {
-			// TODO:接收数据
 			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
 			// 设置文件类型，例如选择所有类型的文件
 			intent.setType("*/*");
@@ -85,6 +97,27 @@ public class MainActivity extends AppCompatActivity {
 			// 启动文件选择器
 			startActivityForResult(intent, REQUEST_CODE_PICK_FILE);
 			mainViewModel.action = MainViewModel.RECEIVE;
+		});
+
+		btnSendMsg.setOnClickListener(v -> {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try{
+						String msg = etMsg.getText().toString();
+						mainViewModel.mSocketClient.sendMsg(msg);
+						String server_msg = mainViewModel.mSocketClient.recvMsg();
+						mainAct.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								serverMsg.setText("服务器消息：" + server_msg);
+							}
+						});
+					}catch (Exception e){
+						e.printStackTrace();
+					}
+				}
+			}).start();
 		});
 	}
 

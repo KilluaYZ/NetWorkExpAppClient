@@ -101,7 +101,6 @@ public class FileDialog extends DialogFragment {
 			if (getActivity() == null) {
 				return;
 			}
-			long startTime = System.currentTimeMillis();
 			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(getActivity(), mViewModel.outFileUriPath);
 			mViewModel.mSocketClient.initSend();
 			while (mBinaryFileManager.has_next()) {
@@ -119,11 +118,24 @@ public class FileDialog extends DialogFragment {
 	}
 
 	private void receiveFile() {
-		if (getActivity() == null) {
-			return;
-		}
 		new Thread(() -> {
-			// TODO:接收文件
+			// 大文件传输包拆分和拼接的Manager
+			if (getActivity() == null) {
+				return;
+			}
+			MBinaryFileManager mBinaryFileManager = new MBinaryFileManager(getActivity(), mViewModel.outFileUriPath);
+			mViewModel.mSocketClient.initReceive();
+			while (mBinaryFileManager.has_next()) {
+				mViewModel.mSocketClient.receiveSyn(mBinaryFileManager, () -> {
+					int totalPackageNum = mBinaryFileManager.getTotalNum();
+					int curPackageNum = mBinaryFileManager.getCurNum();
+					activity.runOnUiThread(() -> {
+						mViewModel.packageSum.setValue(totalPackageNum);
+						mViewModel.packageCount.setValue(curPackageNum);
+					});
+					return null;
+				});
+			}
 		}).start();
 	}
 

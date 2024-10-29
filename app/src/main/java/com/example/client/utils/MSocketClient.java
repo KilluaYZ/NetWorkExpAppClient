@@ -159,4 +159,26 @@ public class MSocketClient {
             });
         }
     }
+
+    public void sendMsg(String msg) throws IOException {
+        // 构造Frame
+        MFrame mFrame = new MFrame()
+                .set_id(0)
+                .set_type(MFrame.FRAME_TYPE_MSG);
+        mFrame.set_buf(msg.getBytes());
+        mFrame.set_length(msg.length());
+
+        // 发送
+        OutputStream out = this.socket.getOutputStream();
+        out.write(mFrame.toBytes());
+        out.flush();
+    }
+
+    public String recvMsg() throws IOException {
+        InputStream in = socket.getInputStream();
+        byte[] buffer = new byte[1024];
+        int readSize = in.read(buffer);
+        MFrame mFrame = new MFrame().fromBytes(buffer);
+        return new String(mFrame.get_buf());
+    }
 }

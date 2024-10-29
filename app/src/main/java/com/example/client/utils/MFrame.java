@@ -15,6 +15,7 @@ public class MFrame {
     public static int FRAME_TYPE_ACK = 4;
     public static int FRAME_TYPE_REQUEST_DATA = 5;
     public static int FRAME_TYPE_SEND_DATA = 6;
+    public static int FRAME_TYPE_MSG = 7;
     public MFrame() {
         this._type = 0;
         this._buf = new byte[FRAME_SIZE];
@@ -27,10 +28,10 @@ public class MFrame {
         if (_data.length < FRAME_HEADER_SIZE) throw new RuntimeException();
         this._id = bytesToInt32LittleEndian(_data, 0);
         this._type = bytesToInt16LittleEndian(_data, 4);
-        if(this._type == FRAME_TYPE_START || this._type == FRAME_TYPE_DATA){
+        if(this._type == FRAME_TYPE_START || this._type == FRAME_TYPE_DATA || this._type == FRAME_TYPE_MSG){
             this._length = bytesToInt16LittleEndian(_data, 6);
         }
-        if(this._type == FRAME_TYPE_DATA){
+        if(this._type == FRAME_TYPE_DATA || this._type == FRAME_TYPE_MSG){
             System.arraycopy(_data, FRAME_HEADER_SIZE, this._buf, 0, this._length);
         }
         return this;
@@ -81,7 +82,7 @@ public class MFrame {
         int32ToBytesLittleEndian(ret, 0, this._id);
         int16ToBytesLittleEndian(ret, 4, this._type);
         int16ToBytesLittleEndian(ret, 6, this._length);
-        if(this._type == FRAME_TYPE_DATA){
+        if(this._type == FRAME_TYPE_DATA || this._type == FRAME_TYPE_MSG){
             System.arraycopy(this._buf, 0, ret, FRAME_HEADER_SIZE, this._length);
         }
         return ret;
@@ -119,7 +120,8 @@ public class MFrame {
     }
 
     public MFrame set_buf(byte[] _buf){
-        this._buf = _buf;
+//        this._buf = _buf;
+        System.arraycopy(_buf, 0, this._buf, 0, _buf.length);
         return this;
     }
 }
